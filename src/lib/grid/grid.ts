@@ -11,7 +11,20 @@ export type GridLayout = {
 export type GridSvgInput = GridInput &
   GridLayout & {
     height: number;
+    colors?: GridSvgColors;
   };
+
+export type GridSvgColors = {
+  background: string;
+  columnFill: string;
+  guide: string;
+};
+
+const defaultSvgColors: GridSvgColors = {
+  background: '#FDFCF7',
+  columnFill: '#C55120',
+  guide: '#C55120',
+};
 
 export type GridValidationErrorCode =
   | 'not-integer'
@@ -93,6 +106,7 @@ export function generateGridSvg({
   columnWidth,
   gutterWidth,
   height,
+  colors = defaultSvgColors,
 }: GridSvgInput): string {
   const groups = Array.from({ length: columns }, (_, index) => {
     const x = index * (columnWidth + gutterWidth);
@@ -100,16 +114,16 @@ export function generateGridSvg({
 
     return [
       '<g>',
-      `<line x1="${x}" y1="0" x2="${x}" y2="${height}" stroke="#D6542C" stroke-opacity="0.55" stroke-width="1" />`,
-      `<rect x="${x}" y="0" width="${columnWidth}" height="${height}" fill="#D6542C" fill-opacity="0.48" />`,
-      `<line x1="${x2}" y1="0" x2="${x2}" y2="${height}" stroke="#D6542C" stroke-opacity="0.55" stroke-width="1" />`,
+      `<line x1="${x}" y1="0" x2="${x}" y2="${height}" stroke="${colors.guide}" stroke-opacity="0.55" stroke-width="1" />`,
+      `<rect x="${x}" y="0" width="${columnWidth}" height="${height}" fill="${colors.columnFill}" fill-opacity="0.48" />`,
+      `<line x1="${x2}" y1="0" x2="${x2}" y2="${height}" stroke="${colors.guide}" stroke-opacity="0.55" stroke-width="1" />`,
       '</g>',
     ].join('');
   }).join('');
 
   return [
     `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none" xmlns="http://www.w3.org/2000/svg">`,
-    `<rect width="${width}" height="${height}" fill="#FFFDF6" />`,
+    `<rect width="${width}" height="${height}" fill="${colors.background}" />`,
     groups,
     '</svg>',
   ].join('');
