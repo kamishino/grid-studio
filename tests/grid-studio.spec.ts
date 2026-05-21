@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 
 test('calculates, previews, and downloads a grid SVG', async ({ page }) => {
   await page.goto('/');
@@ -114,6 +115,77 @@ test('fits wide previews and calculates custom column spans', async ({ page }) =
   await expect(spanResults).toContainText('9 columns, 870px');
   await expect(spanResults).toContainText('Separator gutter');
   await expect(spanResults).toContainText('30px');
+
+  const rulerBoxes = await preview.evaluate((previewNode) => {
+    const column = previewNode.querySelector('[aria-label="Column Width 70px"]');
+    const gutter = previewNode.querySelector('[aria-label="Gutter Width 30px"]');
+
+    if (!column || !gutter) {
+      throw new Error('Missing ruler labels');
+    }
+
+    const columnBox = column.getBoundingClientRect();
+    const gutterBox = gutter.getBoundingClientRect();
+
+    return {
+      columnRight: columnBox.right,
+      gutterLeft: gutterBox.left,
+    };
+  });
+
+  expect(rulerBoxes.gutterLeft).toBeGreaterThan(rulerBoxes.columnRight);
+
+  const svgState = await page.locator('.svg-preview-canvas svg').evaluate((svg) => {
+    const rects = Array.from(svg.querySelectorAll('rect')).slice(1);
+    const activeRect = rects[0];
+    const inactiveRect = rects[3];
+
+    return {
+      activeStroke: activeRect.getAttribute('stroke'),
+      activeDash: activeRect.getAttribute('stroke-dasharray'),
+      inactiveStroke: inactiveRect.getAttribute('stroke'),
+      inactiveDash: inactiveRect.getAttribute('stroke-dasharray'),
+    };
+  });
+
+  expect(svgState.activeStroke).toBe('#C55120');
+  expect(svgState.activeDash).toBeNull();
+  expect(svgState.inactiveStroke).toBe('#C55120');
+  expect(svgState.inactiveDash).toBe('6 5');
+
+  await page.getByRole('button', { name: 'Primary color' }).click();
+  await expect(page.getByLabel('Primary color controls')).toBeVisible();
+  await page.getByRole('textbox', { name: 'Hex Code' }).fill('#3366FF');
+  await expect(page.locator('.svg-preview-canvas svg rect').nth(1)).toHaveAttribute(
+    'stroke',
+    '#3366FF',
+  );
+
+  await page.getByLabel('HSL Hue').fill('220');
+  await page.getByLabel('OKLCH Hue').fill('240');
+  const colorAfterSliders = await page
+    .locator('.svg-preview-canvas svg rect')
+    .nth(1)
+    .getAttribute('stroke');
+  expect(colorAfterSliders).toMatch(/^#[0-9A-F]{6}$/);
+
+  await page.getByRole('textbox', { name: 'Hex Code' }).fill('#3366FF');
+  await page.reload();
+  await expect(page.locator('.svg-preview-canvas svg rect').nth(1)).toHaveAttribute(
+    'stroke',
+    '#3366FF',
+  );
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: /Download SVG/i }).first().click();
+  const download = await downloadPromise;
+  const downloadPath = await download.path();
+
+  if (!downloadPath) {
+    throw new Error('Missing downloaded SVG path');
+  }
+
+  await expect.poll(async () => readFile(downloadPath, 'utf8')).toContain('#3366FF');
 });
 
 test('activates preview when a result row is clicked', async ({ page }) => {

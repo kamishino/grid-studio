@@ -78,4 +78,28 @@ describe('generateGridSvg', () => {
     expect(svg).toContain('<rect x="0" y="0" width="106" height="200"');
     expect(svg).toContain('<line x1="106" y1="0" x2="106" y2="200"');
   });
+
+  it('renders active span columns and dashed inactive columns', () => {
+    const svg = generateGridSvg({
+      width: 1170,
+      columns: 12,
+      columnWidth: 70,
+      gutterWidth: 30,
+      height: 200,
+      selectedSpanColumns: 3,
+      colors: {
+        background: '#FDFCF7',
+        columnFill: '#3366FF',
+        guide: '#3366FF',
+        inactiveColumnFill: '#99AAFF',
+        inactiveGuide: '#99AAFF',
+      },
+    });
+
+    expect(svg).toContain('fill="#3366FF"');
+    expect(svg).toContain('stroke="#3366FF"');
+    expect(svg).toContain('fill="#99AAFF"');
+    expect(svg).toContain('stroke="#99AAFF"');
+    expect(svg).toContain('stroke-dasharray="6 5"');
+  });
 });
