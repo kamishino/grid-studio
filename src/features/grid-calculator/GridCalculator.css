@@ -147,6 +147,19 @@
   background: var(--component-results-row-selected);
 }
 
+.results-table tbody tr {
+  cursor: pointer;
+}
+
+.results-table tbody tr:hover td {
+  background: var(--component-results-row-selected);
+}
+
+.results-table tbody tr:focus {
+  outline: 2px solid var(--component-results-row-focus);
+  outline-offset: -2px;
+}
+
 .row-actions {
   display: flex;
   flex-wrap: wrap;

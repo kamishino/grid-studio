@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "npm run tokens:build && tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest run src/lib/grid/grid.test.ts",
+    "test": "vitest run src/lib/grid/grid.test.ts scripts/build-tokens.test.mjs",
     "test:smoke": "playwright test",
     "test:watch": "vitest",
     "tokens:build": "node scripts/build-tokens.mjs"

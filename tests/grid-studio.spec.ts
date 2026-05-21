@@ -24,3 +24,32 @@ test('calculates, previews, and downloads a grid SVG', async ({ page }) => {
 
   expect(download.suggestedFilename()).toBe('grid-960px-8col-106px-16px.svg');
 });
+
+test('activates preview when a result row is clicked', async ({ page }) => {
+  await page.goto('/');
+
+  const targetRow = page.getByRole('row').filter({ hasText: '99px' }).filter({
+    hasText: '24px',
+  });
+
+  await targetRow.click();
+
+  await expect(page.getByLabel('Selected grid preview')).toContainText(
+    '99px columns, 24px gutters',
+  );
+});
+
+test('activates preview from a focused result row with keyboard', async ({ page }) => {
+  await page.goto('/');
+
+  const targetRow = page.getByRole('row').filter({ hasText: '92px' }).filter({
+    hasText: '32px',
+  });
+
+  await targetRow.focus();
+  await page.keyboard.press('Enter');
+
+  await expect(page.getByLabel('Selected grid preview')).toContainText(
+    '92px columns, 32px gutters',
+  );
+});

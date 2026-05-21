@@ -87,6 +87,20 @@ export function GridCalculator() {
     URL.revokeObjectURL(url);
   };
 
+  const activatePreview = (layout: GridLayout) => {
+    setSelectedLayout(layout);
+  };
+
+  const handleRowKeyDown = (
+    event: React.KeyboardEvent<HTMLTableRowElement>,
+    layout: GridLayout,
+  ) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      activatePreview(layout);
+    }
+  };
+
   return (
     <div className="tool-layout">
       <section className="control-panel" aria-label="Grid inputs">
@@ -140,7 +154,11 @@ export function GridCalculator() {
               {layouts.map((layout) => (
                 <tr
                   key={`${layout.columnWidth}-${layout.gutterWidth}`}
+                  tabIndex={0}
+                  aria-label={`Preview ${layout.columnWidth}px columns and ${layout.gutterWidth}px gutters`}
                   className={activeLayout === layout ? 'is-selected' : undefined}
+                  onClick={() => activatePreview(layout)}
+                  onKeyDown={(event) => handleRowKeyDown(event, layout)}
                 >
                   <td>{layout.columnWidth}px</td>
                   <td>{layout.gutterWidth}px</td>
@@ -148,7 +166,10 @@ export function GridCalculator() {
                     <div className="row-actions">
                       <button
                         type="button"
-                        onClick={() => setSelectedLayout(layout)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          activatePreview(layout);
+                        }}
                         aria-label={`Preview ${layout.columnWidth}px columns and ${layout.gutterWidth}px gutters`}
                       >
                         <Eye size={16} />
@@ -156,7 +177,10 @@ export function GridCalculator() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => downloadSvg(layout)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          downloadSvg(layout);
+                        }}
                         aria-label={`Download SVG for ${layout.columnWidth}px columns and ${layout.gutterWidth}px gutters`}
                       >
                         <Download size={16} />
