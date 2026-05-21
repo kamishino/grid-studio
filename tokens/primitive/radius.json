@@ -1,0 +1,14 @@
+{
+  "primitive": {
+    "radius": {
+      "sm": {
+        "$type": "dimension",
+        "$value": "6px"
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "8px"
+      }
+    }
+  }
+}

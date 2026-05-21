@@ -1,0 +1,18 @@
+{
+  "component": {
+    "app": {
+      "shell": {
+        "padding": {
+          "$type": "dimension",
+          "$value": "{primitive.spacing.8}"
+        }
+      },
+      "workspace": {
+        "maxWidth": {
+          "$type": "dimension",
+          "$value": "1120px"
+        }
+      }
+    }
+  }
+}

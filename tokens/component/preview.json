@@ -1,0 +1,18 @@
+{
+  "component": {
+    "preview": {
+      "background": {
+        "$type": "color",
+        "$value": "{semantic.color.field}"
+      },
+      "columnFill": {
+        "$type": "color",
+        "$value": "{semantic.color.accent}"
+      },
+      "guide": {
+        "$type": "color",
+        "$value": "{semantic.color.accent}"
+      }
+    }
+  }
+}

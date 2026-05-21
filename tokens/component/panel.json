@@ -1,0 +1,18 @@
+{
+  "component": {
+    "panel": {
+      "background": {
+        "$type": "color",
+        "$value": "{semantic.color.surface}"
+      },
+      "border": {
+        "$type": "color",
+        "$value": "{semantic.color.border}"
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{primitive.radius.md}"
+      }
+    }
+  }
+}

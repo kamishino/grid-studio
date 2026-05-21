@@ -1,0 +1,36 @@
+{
+  "component": {
+    "button": {
+      "background": {
+        "$type": "color",
+        "$value": "{semantic.color.surface}"
+      },
+      "backgroundSubtle": {
+        "$type": "color",
+        "$value": "{primitive.color.neutral.100}"
+      },
+      "border": {
+        "$type": "color",
+        "$value": "{semantic.color.border}"
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{primitive.radius.sm}"
+      },
+      "text": {
+        "$type": "color",
+        "$value": "{semantic.color.text}"
+      },
+      "hover": {
+        "border": {
+          "$type": "color",
+          "$value": "{semantic.color.accent}"
+        },
+        "text": {
+          "$type": "color",
+          "$value": "{semantic.color.accentStrong}"
+        }
+      }
+    }
+  }
+}

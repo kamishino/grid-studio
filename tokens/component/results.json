@@ -1,0 +1,16 @@
+{
+  "component": {
+    "results": {
+      "row": {
+        "selected": {
+          "$type": "color",
+          "$value": "{semantic.color.selected}"
+        },
+        "focus": {
+          "$type": "color",
+          "$value": "{semantic.color.accent}"
+        }
+      }
+    }
+  }
+}

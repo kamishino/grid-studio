@@ -1,0 +1,28 @@
+{
+  "component": {
+    "input": {
+      "background": {
+        "$type": "color",
+        "$value": "{semantic.color.field}"
+      },
+      "border": {
+        "$type": "color",
+        "$value": "{semantic.color.border}"
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{primitive.radius.md}"
+      },
+      "value": {
+        "fontSize": {
+          "$type": "dimension",
+          "$value": "2rem"
+        },
+        "fontWeight": {
+          "$type": "fontWeight",
+          "$value": "760"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "semantic": {
+    "color": {
+      "background": {
+        "$type": "color",
+        "$value": "{primitive.color.neutral.50}"
+      },
+      "surface": {
+        "$type": "color",
+        "$value": "#FFFFFF"
+      },
+      "field": {
+        "$type": "color",
+        "$value": "{primitive.color.canvas.base}"
+      },
+      "text": {
+        "$type": "color",
+        "$value": "{primitive.color.neutral.950}"
+      },
+      "muted": {
+        "$type": "color",
+        "$value": "{primitive.color.neutral.600}"
+      },
+      "border": {
+        "$type": "color",
+        "$value": "{primitive.color.neutral.200}"
+      },
+      "accent": {
+        "$type": "color",
+        "$value": "{primitive.color.accent.600}"
+      },
+      "accentStrong": {
+        "$type": "color",
+        "$value": "{primitive.color.accent.800}"
+      },
+      "selected": {
+        "$type": "color",
+        "$value": "{primitive.color.canvas.selected}"
+      }
+    }
+  }
+}

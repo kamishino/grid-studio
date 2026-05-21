@@ -1,0 +1,66 @@
+/**
+ * Do not edit directly, this file was auto-generated.
+ */
+
+:root {
+  --primitive-color-neutral-50: #f3f9f3;
+  --primitive-color-neutral-100: #ebf3eb;
+  --primitive-color-neutral-150: #e2eae2;
+  --primitive-color-neutral-200: #d4ded4;
+  --primitive-color-neutral-600: #586057;
+  --primitive-color-neutral-950: #1d241d;
+  --primitive-color-accent-600: #c55120;
+  --primitive-color-accent-800: #8b2a00;
+  --primitive-color-canvas-base: #fdfcf7;
+  --primitive-color-canvas-selected: #f1e6da;
+  --primitive-spacing-1: 4px;
+  --primitive-spacing-2: 8px;
+  --primitive-spacing-3: 12px;
+  --primitive-spacing-4: 16px;
+  --primitive-spacing-5: 20px;
+  --primitive-spacing-6: 24px;
+  --primitive-spacing-7: 28px;
+  --primitive-spacing-8: 32px;
+  --primitive-spacing-9: 36px;
+  --primitive-radius-sm: 6px;
+  --primitive-radius-md: 8px;
+  --primitive-font-family-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --primitive-font-size-xs: 0.78rem;
+  --primitive-font-size-sm: 0.86rem;
+  --primitive-font-size-md: 1rem;
+  --primitive-font-size-lg: 1.45rem;
+  --primitive-font-weight-bold: 700;
+  --primitive-font-weight-strong: 750;
+  --primitive-font-weight-heavy: 800;
+  --semantic-color-background: #f3f9f3;
+  --semantic-color-surface: #ffffff;
+  --semantic-color-field: #fdfcf7;
+  --semantic-color-text: #1d241d;
+  --semantic-color-muted: #586057;
+  --semantic-color-border: #d4ded4;
+  --semantic-color-accent: #c55120;
+  --semantic-color-accent-strong: #8b2a00;
+  --semantic-color-selected: #f1e6da;
+  --component-app-shell-padding: 32px;
+  --component-app-workspace-max-width: 1120px;
+  --component-button-background: #ffffff;
+  --component-button-background-subtle: #ebf3eb;
+  --component-button-border: #d4ded4;
+  --component-button-radius: 6px;
+  --component-button-text: #1d241d;
+  --component-button-hover-border: #c55120;
+  --component-button-hover-text: #8b2a00;
+  --component-input-background: #fdfcf7;
+  --component-input-border: #d4ded4;
+  --component-input-radius: 8px;
+  --component-input-value-font-size: 2rem;
+  --component-input-value-font-weight: 760;
+  --component-panel-background: #ffffff;
+  --component-panel-border: #d4ded4;
+  --component-panel-radius: 8px;
+  --component-preview-background: #fdfcf7;
+  --component-preview-column-fill: #c55120;
+  --component-preview-guide: #c55120;
+  --component-results-row-selected: #f1e6da;
+  --component-results-row-focus: #c55120;
+}
