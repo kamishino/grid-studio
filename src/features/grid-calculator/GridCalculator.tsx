@@ -92,6 +92,7 @@ export function GridCalculator() {
           ...activeLayout,
           height: SVG_HEIGHT,
           colors: getPreviewColors(),
+          selectedSpanColumns: spanColumns,
         })
       : null;
 
@@ -112,6 +113,7 @@ export function GridCalculator() {
       ...layout,
       height: SVG_HEIGHT,
       colors: getPreviewColors(),
+      selectedSpanColumns: spanColumns,
     });
     const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
