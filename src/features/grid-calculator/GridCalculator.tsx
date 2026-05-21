@@ -220,9 +220,81 @@ export function GridCalculator() {
               Download SVG
             </button>
           </div>
-          <div className="svg-preview" dangerouslySetInnerHTML={{ __html: activeSvg }} />
+
+          <PreviewMetrics width={width} columns={columns} layout={activeLayout} />
+
+          <div className="svg-preview" aria-label={`${width}px grid preview canvas`}>
+            <div className="preview-measurement" style={{ width }}>
+              <DimensionRuler label="Overall Width" value={`${width}px`} />
+              <div
+                className="svg-preview-canvas"
+                dangerouslySetInnerHTML={{ __html: activeSvg }}
+              />
+              <div
+                className="segment-rulers"
+                style={{
+                  gridTemplateColumns: `${activeLayout.columnWidth}px ${Math.max(
+                    activeLayout.gutterWidth,
+                    1,
+                  )}px`,
+                }}
+              >
+                <DimensionRuler
+                  label="Column Width"
+                  value={`${activeLayout.columnWidth}px`}
+                />
+                <DimensionRuler
+                  label="Gutter Width"
+                  value={`${activeLayout.gutterWidth}px`}
+                />
+              </div>
+            </div>
+          </div>
         </section>
       ) : null}
+    </div>
+  );
+}
+
+type PreviewMetricsProps = {
+  width: number;
+  columns: number;
+  layout: GridLayout;
+};
+
+function PreviewMetrics({ width, columns, layout }: PreviewMetricsProps) {
+  const metrics = [
+    ['Column Width', `${layout.columnWidth}px`],
+    ['Gutter Width', `${layout.gutterWidth}px`],
+    ['Number of Columns', String(columns)],
+    ['Overall Width', `${width}px`],
+  ] as const;
+
+  return (
+    <dl className="preview-metrics" aria-label="Selected grid dimensions">
+      {metrics.map(([label, value]) => (
+        <div key={label}>
+          <dt>{label}</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+type DimensionRulerProps = {
+  label: string;
+  value: string;
+};
+
+function DimensionRuler({ label, value }: DimensionRulerProps) {
+  return (
+    <div className="dimension-ruler" aria-label={`${label} ${value}`}>
+      <span className="ruler-line" aria-hidden="true" />
+      <span className="ruler-label">
+        <span>{label}</span>
+        <strong>{value}</strong>
+      </span>
     </div>
   );
 }
