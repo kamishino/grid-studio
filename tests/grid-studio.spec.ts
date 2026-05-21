@@ -14,9 +14,22 @@ test('calculates, previews, and downloads a grid SVG', async ({ page }) => {
 
   await expect(targetRow).toBeVisible();
   await targetRow.getByRole('button', { name: /Preview/i }).click();
-  await expect(page.getByLabel('Selected grid preview')).toContainText(
-    '106px columns, 16px gutters',
-  );
+  const preview = page.getByLabel('Selected grid preview');
+  await expect(preview).toContainText('106px columns, 16px gutters');
+  await expect(preview).toContainText('Column Width');
+  await expect(preview).toContainText('Gutter Width');
+  await expect(preview).toContainText('Number of Columns');
+  await expect(preview).toContainText('Overall Width');
+  await expect(preview.getByLabel('Column Width 106px')).toBeVisible();
+  await expect(preview.getByLabel('Gutter Width 16px')).toBeVisible();
+  await expect(preview.getByLabel('Overall Width 960px')).toBeVisible();
+  await expect(preview).toContainText('8');
+  await expect(preview).toContainText('960px');
+
+  const previewIsDetached = await page
+    .locator('.results-panel')
+    .evaluate((resultsPanel) => !resultsPanel.querySelector('.preview-panel'));
+  expect(previewIsDetached).toBe(true);
 
   const downloadPromise = page.waitForEvent('download');
   await targetRow.getByRole('button', { name: /Download SVG/i }).click();
