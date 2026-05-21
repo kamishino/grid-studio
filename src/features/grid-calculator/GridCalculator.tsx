@@ -2,7 +2,9 @@ import { Download, Eye, Minus, Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   calculateGridLayouts,
+  calculateGridSpan,
   generateGridSvg,
+  type GridSpanCalculation,
   type GridLayout,
   type GridSvgColors,
   validateGridInput,
@@ -22,11 +24,19 @@ const parseIntegerInput = (value: string) => {
   return Number(value);
 };
 
-const clampInputValue = (value: string, delta: number) => {
+const clampInputValue = (
+  value: string,
+  delta: number,
+  min = 0,
+  max = Number.POSITIVE_INFINITY,
+) => {
   const parsed = parseIntegerInput(value);
-  const current = Number.isFinite(parsed) ? parsed : 0;
-  return String(Math.max(0, current + delta));
+  const current = Number.isFinite(parsed) ? parsed : min;
+  return String(Math.min(max, Math.max(min, current + delta)));
 };
+
+const getDefaultSpanColumns = (columns: number) =>
+  Math.max(1, Math.min(3, columns - 1));
 
 const getCssToken = (name: string, fallback: string) => {
   if (typeof window === 'undefined') {
@@ -48,6 +58,7 @@ const getPreviewColors = (): GridSvgColors => ({
 export function GridCalculator() {
   const [widthInput, setWidthInput] = useState('960');
   const [columnsInput, setColumnsInput] = useState('8');
+  const [spanColumnsInput, setSpanColumnsInput] = useState('3');
   const [previewMode, setPreviewMode] = useState<PreviewMode>(DEFAULT_PREVIEW_MODE);
 
   const width = parseIntegerInput(widthInput);
@@ -59,6 +70,20 @@ export function GridCalculator() {
   );
   const [selectedLayout, setSelectedLayout] = useState<GridLayout | null>(null);
   const activeLayout = selectedLayout ?? layouts[0] ?? null;
+  const maxSpanColumns = validation.ok ? Math.max(1, columns - 1) : 1;
+  const parsedSpanColumns = parseIntegerInput(spanColumnsInput);
+  const spanColumns = Number.isFinite(parsedSpanColumns)
+    ? Math.min(maxSpanColumns, Math.max(1, parsedSpanColumns))
+    : getDefaultSpanColumns(Number.isInteger(columns) ? columns : 2);
+  const spanCalculation =
+    validation.ok && activeLayout
+      ? calculateGridSpan({
+          width,
+          columns,
+          ...activeLayout,
+          spanColumns,
+        })
+      : null;
   const activeSvg =
     validation.ok && activeLayout
       ? generateGridSvg({
@@ -73,6 +98,12 @@ export function GridCalculator() {
   useEffect(() => {
     setSelectedLayout(null);
   }, [columns, width]);
+
+  useEffect(() => {
+    if (Number.isInteger(columns) && columns >= 2) {
+      setSpanColumnsInput(String(getDefaultSpanColumns(columns)));
+    }
+  }, [columns]);
 
   const downloadSvg = (layout: GridLayout) => {
     const svg = generateGridSvg({
@@ -102,6 +133,19 @@ export function GridCalculator() {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       activatePreview(layout);
+    }
+  };
+
+  const handleSpanColumnsChange = (value: string) => {
+    if (value === '') {
+      setSpanColumnsInput(value);
+      return;
+    }
+
+    const parsed = parseIntegerInput(value);
+
+    if (Number.isFinite(parsed)) {
+      setSpanColumnsInput(String(Math.min(maxSpanColumns, Math.max(1, parsed))));
     }
   };
 
@@ -230,8 +274,28 @@ export function GridCalculator() {
 
           <PreviewMetrics width={width} columns={columns} layout={activeLayout} />
 
-          <div className={`svg-preview is-${previewMode}`} aria-label={`${width}px grid preview canvas`}>
-            <div className="preview-measurement" style={{ '--preview-width': `${width}px` } as React.CSSProperties}>
+          {spanCalculation ? (
+            <SpanCalculator
+              maxSpanColumns={maxSpanColumns}
+              spanCalculation={spanCalculation}
+              spanColumnsInput={spanColumnsInput}
+              onSpanColumnsChange={handleSpanColumnsChange}
+              onSpanColumnsStep={(delta) =>
+                setSpanColumnsInput((current) =>
+                  clampInputValue(current, delta, 1, maxSpanColumns),
+                )
+              }
+            />
+          ) : null}
+
+          <div
+            className={`svg-preview is-${previewMode}`}
+            aria-label={`${width}px grid preview canvas`}
+          >
+            <div
+              className="preview-measurement"
+              style={{ '--preview-width': `${width}px` } as React.CSSProperties}
+            >
               <DimensionRuler label="Overall Width" value={`${width}px`} />
               <div
                 className="svg-preview-canvas"
@@ -318,6 +382,64 @@ function PreviewMetrics({ width, columns, layout }: PreviewMetricsProps) {
         </div>
       ))}
     </dl>
+  );
+}
+
+type SpanCalculatorProps = {
+  maxSpanColumns: number;
+  spanCalculation: GridSpanCalculation;
+  spanColumnsInput: string;
+  onSpanColumnsChange: (value: string) => void;
+  onSpanColumnsStep: (delta: number) => void;
+};
+
+function SpanCalculator({
+  maxSpanColumns,
+  spanCalculation,
+  spanColumnsInput,
+  onSpanColumnsChange,
+  onSpanColumnsStep,
+}: SpanCalculatorProps) {
+  return (
+    <section className="span-calculator" aria-labelledby="span-calculator-title">
+      <div className="span-calculator-input">
+        <div>
+          <h3 id="span-calculator-title">Span calculator</h3>
+          <p>Measure a contiguous column span against the selected grid.</p>
+        </div>
+        <GridNumberField
+          id="span-columns"
+          label="Span columns"
+          value={spanColumnsInput}
+          onChange={onSpanColumnsChange}
+          onStep={onSpanColumnsStep}
+        />
+      </div>
+
+      <dl className="span-results" aria-label="Selected span dimensions">
+        <div>
+          <dt>Span width</dt>
+          <dd>{spanCalculation.spanWidth}px</dd>
+        </div>
+        <div>
+          <dt>Remaining width</dt>
+          <dd>{spanCalculation.remainingWidth}px</dd>
+        </div>
+        <div>
+          <dt>Complement</dt>
+          <dd>
+            {spanCalculation.complementColumns} columns,{' '}
+            {spanCalculation.complementWidth}px
+          </dd>
+        </div>
+        <div>
+          <dt>Separator gutter</dt>
+          <dd>{spanCalculation.separatorGutterWidth}px</dd>
+        </div>
+      </dl>
+
+      <p className="span-limit">Span range: 1-{maxSpanColumns} columns</p>
+    </section>
   );
 }
 
