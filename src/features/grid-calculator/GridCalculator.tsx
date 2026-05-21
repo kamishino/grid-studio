@@ -1,5 +1,16 @@
-import { Download, Eye, Minus, Plus } from 'lucide-react';
+import { Copy, Download, Eye, Minus, Plus, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import {
+  DEFAULT_PRIMARY_HEX,
+  generateOklchPresets,
+  hexToOklch,
+  hslToOklch,
+  normalizeHexColor,
+  oklchToHex,
+  oklchToHsl,
+  type HslColor,
+  type OklchColor,
+} from '../../lib/color/color';
 import {
   calculateGridLayouts,
   calculateGridSpan,
@@ -13,27 +24,10 @@ import './GridCalculator.css';
 
 const SVG_HEIGHT = 200;
 const DEFAULT_PREVIEW_MODE = 'fit';
-const DEFAULT_PRIMARY_COLOR = '#C55120';
 const PRIMARY_COLOR_STORAGE_KEY = 'grid-studio-primary-color';
 
 type PreviewMode = 'fit' | 'actual';
-type RgbColor = {
-  r: number;
-  g: number;
-  b: number;
-};
-
-type HslColor = {
-  h: number;
-  s: number;
-  l: number;
-};
-
-type OklchColor = {
-  l: number;
-  c: number;
-  h: number;
-};
+type ColorTab = 'hex' | 'hsl' | 'oklch';
 
 const parseIntegerInput = (value: string) => {
   if (!/^\d+$/.test(value)) {
@@ -68,168 +62,18 @@ const getCssToken = (name: string, fallback: string) => {
   );
 };
 
-const clampNumber = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, value));
-
-const normalizeHexColor = (value: string) => {
-  const trimmed = value.trim();
-  const withHash = trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
-
-  if (/^#[0-9a-fA-F]{6}$/.test(withHash)) {
-    return withHash.toUpperCase();
-  }
-
-  if (/^#[0-9a-fA-F]{3}$/.test(withHash)) {
-    const [, r, g, b] = withHash;
-    return `#${r}${r}${g}${g}${b}${b}`.toUpperCase();
-  }
-
-  return null;
-};
-
-const hexToRgb = (hex: string): RgbColor => {
-  const normalized = normalizeHexColor(hex) ?? DEFAULT_PRIMARY_COLOR;
-  return {
-    r: Number.parseInt(normalized.slice(1, 3), 16),
-    g: Number.parseInt(normalized.slice(3, 5), 16),
-    b: Number.parseInt(normalized.slice(5, 7), 16),
-  };
-};
-
-const rgbToHex = ({ r, g, b }: RgbColor) =>
-  `#${[r, g, b]
-    .map((channel) =>
-      Math.round(clampNumber(channel, 0, 255)).toString(16).padStart(2, '0'),
-    )
-    .join('')}`.toUpperCase();
-
-const hexToHsl = (hex: string): HslColor => {
-  const { r, g, b } = hexToRgb(hex);
-  const red = r / 255;
-  const green = g / 255;
-  const blue = b / 255;
-  const max = Math.max(red, green, blue);
-  const min = Math.min(red, green, blue);
-  const lightness = (max + min) / 2;
-  const delta = max - min;
-
-  if (delta === 0) {
-    return { h: 0, s: 0, l: Math.round(lightness * 100) };
-  }
-
-  const saturation =
-    delta / (1 - Math.abs(2 * lightness - 1));
-  let hue = 0;
-
-  if (max === red) {
-    hue = 60 * (((green - blue) / delta) % 6);
-  } else if (max === green) {
-    hue = 60 * ((blue - red) / delta + 2);
-  } else {
-    hue = 60 * ((red - green) / delta + 4);
-  }
-
-  return {
-    h: Math.round((hue + 360) % 360),
-    s: Math.round(saturation * 100),
-    l: Math.round(lightness * 100),
-  };
-};
-
-const hslToHex = ({ h, s, l }: HslColor) => {
-  const saturation = clampNumber(s, 0, 100) / 100;
-  const lightness = clampNumber(l, 0, 100) / 100;
-  const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
-  const x = chroma * (1 - Math.abs(((h / 60) % 2) - 1));
-  const m = lightness - chroma / 2;
-  const hue = ((h % 360) + 360) % 360;
-  let rgb: RgbColor;
-
-  if (hue < 60) {
-    rgb = { r: chroma, g: x, b: 0 };
-  } else if (hue < 120) {
-    rgb = { r: x, g: chroma, b: 0 };
-  } else if (hue < 180) {
-    rgb = { r: 0, g: chroma, b: x };
-  } else if (hue < 240) {
-    rgb = { r: 0, g: x, b: chroma };
-  } else if (hue < 300) {
-    rgb = { r: x, g: 0, b: chroma };
-  } else {
-    rgb = { r: chroma, g: 0, b: x };
-  }
-
-  return rgbToHex({
-    r: (rgb.r + m) * 255,
-    g: (rgb.g + m) * 255,
-    b: (rgb.b + m) * 255,
-  });
-};
-
-const srgbToLinear = (channel: number) => {
-  const normalized = channel / 255;
-  return normalized <= 0.04045
-    ? normalized / 12.92
-    : ((normalized + 0.055) / 1.055) ** 2.4;
-};
-
-const linearToSrgb = (channel: number) => {
-  const normalized =
-    channel <= 0.0031308 ? 12.92 * channel : 1.055 * channel ** (1 / 2.4) - 0.055;
-  return clampNumber(normalized * 255, 0, 255);
-};
-
-const hexToOklch = (hex: string): OklchColor => {
-  const { r, g, b } = hexToRgb(hex);
-  const red = srgbToLinear(r);
-  const green = srgbToLinear(g);
-  const blue = srgbToLinear(b);
-  const l = Math.cbrt(0.4122214708 * red + 0.5363325363 * green + 0.0514459929 * blue);
-  const m = Math.cbrt(0.2119034982 * red + 0.6806995451 * green + 0.1073969566 * blue);
-  const s = Math.cbrt(0.0883024619 * red + 0.2817188376 * green + 0.6299787005 * blue);
-  const oklabL = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s;
-  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
-  const bAxis = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
-
-  return {
-    l: Math.round(oklabL * 1000) / 10,
-    c: Math.round(Math.sqrt(a * a + bAxis * bAxis) * 1000) / 1000,
-    h: Math.round(((Math.atan2(bAxis, a) * 180) / Math.PI + 360) % 360),
-  };
-};
-
-const oklchToHex = ({ l, c, h }: OklchColor) => {
-  const lightness = clampNumber(l, 0, 100) / 100;
-  const chroma = clampNumber(c, 0, 0.4);
-  const hueRadians = (h * Math.PI) / 180;
-  const a = chroma * Math.cos(hueRadians);
-  const b = chroma * Math.sin(hueRadians);
-  const lPrime = lightness + 0.3963377774 * a + 0.2158037573 * b;
-  const mPrime = lightness - 0.1055613458 * a - 0.0638541728 * b;
-  const sPrime = lightness - 0.0894841775 * a - 1.291485548 * b;
-  const lCubed = lPrime ** 3;
-  const mCubed = mPrime ** 3;
-  const sCubed = sPrime ** 3;
-
-  return rgbToHex({
-    r: linearToSrgb(4.0767416621 * lCubed - 3.3077115913 * mCubed + 0.2309699292 * sCubed),
-    g: linearToSrgb(-1.2684380046 * lCubed + 2.6097574011 * mCubed - 0.3413193965 * sCubed),
-    b: linearToSrgb(-0.0041960863 * lCubed - 0.7034186147 * mCubed + 1.707614701 * sCubed),
-  });
-};
-
 const getStoredPrimaryColor = () => {
   if (typeof window === 'undefined') {
-    return DEFAULT_PRIMARY_COLOR;
+    return DEFAULT_PRIMARY_HEX;
   }
 
   return (
     normalizeHexColor(window.localStorage.getItem(PRIMARY_COLOR_STORAGE_KEY) ?? '') ??
-    DEFAULT_PRIMARY_COLOR
+    DEFAULT_PRIMARY_HEX
   );
 };
 
-const getPreviewColors = (primaryColor = DEFAULT_PRIMARY_COLOR): GridSvgColors => ({
+const getPreviewColors = (primaryColor = DEFAULT_PRIMARY_HEX): GridSvgColors => ({
   background: getCssToken('--component-preview-background', '#FDFCF7'),
   columnFill: primaryColor,
   guide: primaryColor,
@@ -242,7 +86,9 @@ export function GridCalculator() {
   const [columnsInput, setColumnsInput] = useState('8');
   const [spanColumnsInput, setSpanColumnsInput] = useState('3');
   const [previewMode, setPreviewMode] = useState<PreviewMode>(DEFAULT_PREVIEW_MODE);
-  const [primaryColor, setPrimaryColor] = useState(getStoredPrimaryColor);
+  const [primaryOklch, setPrimaryOklch] = useState(() =>
+    hexToOklch(getStoredPrimaryColor()),
+  );
   const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
 
   const width = parseIntegerInput(widthInput);
@@ -254,6 +100,7 @@ export function GridCalculator() {
   );
   const [selectedLayout, setSelectedLayout] = useState<GridLayout | null>(null);
   const activeLayout = selectedLayout ?? layouts[0] ?? null;
+  const primaryColor = oklchToHex(primaryOklch);
   const maxSpanColumns = validation.ok ? Math.max(1, columns - 1) : 1;
   const parsedSpanColumns = parseIntegerInput(spanColumnsInput);
   const spanColumns = Number.isFinite(parsedSpanColumns)
@@ -452,9 +299,11 @@ export function GridCalculator() {
             <div className="preview-toolbar">
               <PrimaryColorControl
                 color={primaryColor}
+                oklch={primaryOklch}
                 isOpen={isColorPopoverOpen}
-                onChange={setPrimaryColor}
+                onChange={setPrimaryOklch}
                 onToggle={() => setIsColorPopoverOpen((isOpen) => !isOpen)}
+                onClose={() => setIsColorPopoverOpen(false)}
               />
               <PreviewModeControl mode={previewMode} onChange={setPreviewMode} />
               <button
@@ -580,34 +429,43 @@ function PreviewModeControl({ mode, onChange }: PreviewModeControlProps) {
 
 type PrimaryColorControlProps = {
   color: string;
+  oklch: OklchColor;
   isOpen: boolean;
-  onChange: (color: string) => void;
+  onChange: (color: OklchColor) => void;
   onToggle: () => void;
+  onClose: () => void;
 };
 
 function PrimaryColorControl({
   color,
+  oklch,
   isOpen,
   onChange,
   onToggle,
+  onClose,
 }: PrimaryColorControlProps) {
-  const hsl = hexToHsl(color);
-  const oklch = hexToOklch(color);
+  const [activeTab, setActiveTab] = useState<ColorTab>('oklch');
+  const hsl = oklchToHsl(oklch);
+  const presets = useMemo(() => generateOklchPresets(), []);
 
   const updateHex = (value: string) => {
     const normalized = normalizeHexColor(value);
 
     if (normalized) {
-      onChange(normalized);
+      onChange(hexToOklch(normalized));
     }
   };
 
   const updateHsl = (patch: Partial<HslColor>) => {
-    onChange(hslToHex({ ...hsl, ...patch }));
+    onChange(hslToOklch({ ...hsl, ...patch }));
   };
 
   const updateOklch = (patch: Partial<OklchColor>) => {
-    onChange(oklchToHex({ ...oklch, ...patch }));
+    onChange({ ...oklch, ...patch });
+  };
+
+  const copyHex = async () => {
+    await navigator.clipboard?.writeText(color);
   };
 
   return (
@@ -633,68 +491,134 @@ function PrimaryColorControl({
           className="color-popover"
           aria-label="Primary color controls"
         >
-          <label className="color-field">
-            <span>Hex Code</span>
-            <input
-              aria-label="Hex Code"
-              value={color}
-              onChange={(event) => updateHex(event.target.value)}
-            />
-          </label>
-
-          <div className="color-slider-group" aria-label="HSL Slider">
-            <p>HSL Slider</p>
-            <ColorSlider
-              label="HSL Hue"
-              min={0}
-              max={360}
-              value={hsl.h}
-              onChange={(value) => updateHsl({ h: value })}
-            />
-            <ColorSlider
-              label="HSL Saturation"
-              min={0}
-              max={100}
-              value={hsl.s}
-              onChange={(value) => updateHsl({ s: value })}
-              suffix="%"
-            />
-            <ColorSlider
-              label="HSL Lightness"
-              min={0}
-              max={100}
-              value={hsl.l}
-              onChange={(value) => updateHsl({ l: value })}
-              suffix="%"
-            />
+          <div className="color-popover-header">
+            <div>
+              <p className="eyebrow">Color</p>
+              <h3>Primary color</h3>
+            </div>
+            <button type="button" aria-label="Close color picker" onClick={onClose}>
+              <X size={18} />
+            </button>
           </div>
 
-          <div className="color-slider-group" aria-label="OKLCH Slider">
-            <p>OKLCH Slider</p>
-            <ColorSlider
-              label="OKLCH Lightness"
-              min={0}
-              max={100}
-              value={oklch.l}
-              onChange={(value) => updateOklch({ l: value })}
-              suffix="%"
+          <section className="active-color-summary" aria-label="Active color">
+            <span
+              className="active-color-swatch"
+              style={{ backgroundColor: color }}
+              aria-hidden="true"
             />
-            <ColorSlider
-              label="OKLCH Chroma"
-              min={0}
-              max={0.4}
-              step={0.001}
-              value={oklch.c}
-              onChange={(value) => updateOklch({ c: value })}
-            />
-            <ColorSlider
-              label="OKLCH Hue"
-              min={0}
-              max={360}
-              value={oklch.h}
-              onChange={(value) => updateOklch({ h: value })}
-            />
+            <div>
+              <p>Active color</p>
+              <strong>{color}</strong>
+              <span>Working color for preview columns and SVG export.</span>
+            </div>
+            <button type="button" onClick={copyHex}>
+              <Copy size={16} />
+              Copy hex
+            </button>
+          </section>
+
+          <div className="preset-swatches" aria-label="Prebuilt colors">
+            {presets.map((preset) => (
+              <button
+                key={preset.hue}
+                type="button"
+                aria-label={`Hue ${preset.hue}`}
+                title={`Hue ${preset.hue}`}
+                style={{ backgroundColor: preset.hex }}
+                onClick={() => onChange(preset.oklch)}
+              />
+            ))}
           </div>
+
+          <div className="color-tabs" role="tablist" aria-label="Color mode">
+            {(['hex', 'hsl', 'oklch'] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tab}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab.toUpperCase()}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === 'hex' ? (
+            <div className="color-tab-panel">
+              <label className="color-field">
+                <span>Hex input</span>
+                <input
+                  aria-label="Hex Code"
+                  value={color}
+                  onChange={(event) => updateHex(event.target.value)}
+                />
+              </label>
+            </div>
+          ) : null}
+
+          {activeTab === 'hsl' ? (
+            <div className="color-tab-panel color-slider-group" aria-label="HSL Slider">
+              <ColorSlider
+                label="HSL Hue"
+                min={0}
+                max={360}
+                value={hsl.h}
+                onChange={(value) => updateHsl({ h: value })}
+                track="linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)"
+              />
+              <ColorSlider
+                label="HSL Saturation"
+                min={0}
+                max={100}
+                value={hsl.s}
+                onChange={(value) => updateHsl({ s: value })}
+                suffix="%"
+                track={`linear-gradient(90deg, #9ca3af, ${color})`}
+              />
+              <ColorSlider
+                label="HSL Lightness"
+                min={0}
+                max={100}
+                value={hsl.l}
+                onChange={(value) => updateHsl({ l: value })}
+                suffix="%"
+                track={`linear-gradient(90deg, #050505, ${color}, #ffffff)`}
+              />
+            </div>
+          ) : null}
+
+          {activeTab === 'oklch' ? (
+            <div className="color-tab-panel color-slider-group" aria-label="OKLCH Slider">
+              <ColorSlider
+                label="OKLCH Lightness"
+                min={0}
+                max={100}
+                value={oklch.l}
+                onChange={(value) => updateOklch({ l: value })}
+                suffix="%"
+                track={`linear-gradient(90deg, #111111, ${color}, #ffffff)`}
+              />
+              <ColorSlider
+                label="OKLCH Chroma"
+                min={0}
+                max={0.4}
+                step={0.001}
+                value={oklch.c}
+                onChange={(value) => updateOklch({ c: value })}
+                track={`linear-gradient(90deg, #9ca3af, ${color})`}
+              />
+              <ColorSlider
+                label="OKLCH Hue"
+                min={0}
+                max={360}
+                value={oklch.h}
+                onChange={(value) => updateOklch({ h: value })}
+                track="linear-gradient(90deg, #c7517c, #b8662a, #777b11, #258853, #00899c, #4d76d8, #9b5bbf, #c7517c)"
+              />
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -709,6 +633,7 @@ type ColorSliderProps = {
   onChange: (value: number) => void;
   step?: number;
   suffix?: string;
+  track?: string;
 };
 
 function ColorSlider({
@@ -719,6 +644,7 @@ function ColorSlider({
   onChange,
   step = 1,
   suffix,
+  track,
 }: ColorSliderProps) {
   return (
     <label className="color-slider">
@@ -730,6 +656,7 @@ function ColorSlider({
         max={max}
         step={step}
         value={value}
+        style={{ '--slider-track': track } as React.CSSProperties}
         onChange={(event) => onChange(Number(event.target.value))}
       />
       <output>
