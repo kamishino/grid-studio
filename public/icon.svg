@@ -1,5 +1,5 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grid Studio">
-  <rect width="512" height="512" rx="96" fill="#F7F4EA"/>
+  <rect width="512" height="512" rx="96" fill="#F3F6F2"/>
   <rect x="96" y="104" width="56" height="304" fill="#D6542C"/>
   <rect x="184" y="104" width="56" height="304" fill="#D6542C" fill-opacity="0.72"/>
   <rect x="272" y="104" width="56" height="304" fill="#D6542C" fill-opacity="0.72"/>

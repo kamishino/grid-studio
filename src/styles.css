@@ -1,18 +1,20 @@
 :root {
   color: #2f312d;
-  background: #f7f4ea;
+  background: #f3f6f2;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --surface: #fffdf6;
+  --surface: #ffffff;
   --ink: #2f312d;
-  --muted: #6d6f67;
-  --line: #ded7c6;
+  --muted: #687066;
+  --line: #d9dfd4;
   --accent: #d6542c;
   --accent-dark: #9e321b;
+  --field: #fbfcf8;
+  --selected: #f2ebe3;
 }
 
 * {
@@ -110,7 +112,7 @@ h1 {
   gap: 8px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--field);
   padding: 8px;
 }
 
@@ -143,7 +145,7 @@ h1 {
   border: 1px solid var(--line);
   border-radius: 6px;
   color: var(--ink);
-  background: #f7f4ea;
+  background: #eef3eb;
   cursor: pointer;
 }
 
@@ -212,7 +214,7 @@ h1 {
 }
 
 .results-table tr.is-selected td {
-  background: #f9eee8;
+  background: var(--selected);
 }
 
 .row-actions {
@@ -267,7 +269,7 @@ h1 {
   overflow-x: auto;
   background:
     linear-gradient(90deg, rgba(47, 49, 45, 0.04) 1px, transparent 1px),
-    #fffdf6;
+    #fbfcf8;
   background-size: 24px 24px;
 }
 
@@ -277,7 +279,7 @@ h1 {
   min-width: 420px;
   height: 160px;
   border: 1px solid var(--line);
-  background: #fffdf6;
+  background: #fbfcf8;
 }
 
 .empty-state {

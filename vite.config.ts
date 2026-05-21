@@ -13,8 +13,8 @@ export default defineConfig({
         short_name: 'Grid Studio',
         description:
           'Calculate clean column and gutter systems for web layout work.',
-        theme_color: '#f7f4ea',
-        background_color: '#f7f4ea',
+        theme_color: '#f3f6f2',
+        background_color: '#f3f6f2',
         display: 'standalone',
         icons: [
           {
