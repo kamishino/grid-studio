@@ -43,7 +43,7 @@ test('calculates, previews, and downloads a grid SVG', async ({ page }) => {
   expect(download.suggestedFilename()).toBe('grid-960px-8col-106px-16px.svg');
 });
 
-test('fits wide previews and calculates custom column spans', async ({ page }) => {
+test('fits wide previews and calculates custom column spans', async ({ page, context }) => {
   await page.goto('/');
 
   await page.getByRole('textbox', { name: 'Overall width' }).fill('1170');
@@ -154,14 +154,31 @@ test('fits wide previews and calculates custom column spans', async ({ page }) =
   expect(svgState.inactiveDash).toBe('6 5');
 
   await page.getByRole('button', { name: 'Primary color' }).click();
-  await expect(page.getByLabel('Primary color controls')).toBeVisible();
+  const colorPicker = page.getByLabel('Primary color controls');
+  await expect(colorPicker).toBeVisible();
+  await expect(colorPicker.getByText('Active color')).toBeVisible();
+  await expect(colorPicker.getByRole('button', { name: 'Copy hex' })).toBeVisible();
+  await expect(colorPicker.getByRole('tab', { name: 'OKLCH' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await expect(colorPicker.getByText('Open workbench')).toHaveCount(0);
+
+  const popoverSurface = await colorPicker.evaluate((element) =>
+    window.getComputedStyle(element).backgroundColor,
+  );
+  expect(popoverSurface).toBe('rgb(255, 254, 250)');
+
+  await colorPicker.getByRole('tab', { name: 'HEX' }).click();
   await page.getByRole('textbox', { name: 'Hex Code' }).fill('#3366FF');
   await expect(page.locator('.svg-preview-canvas svg rect').nth(1)).toHaveAttribute(
     'stroke',
     '#3366FF',
   );
 
+  await colorPicker.getByRole('tab', { name: 'HSL' }).click();
   await page.getByLabel('HSL Hue').fill('220');
+  await colorPicker.getByRole('tab', { name: 'OKLCH' }).click();
   await page.getByLabel('OKLCH Hue').fill('240');
   const colorAfterSliders = await page
     .locator('.svg-preview-canvas svg rect')
@@ -169,11 +186,34 @@ test('fits wide previews and calculates custom column spans', async ({ page }) =
     .getAttribute('stroke');
   expect(colorAfterSliders).toMatch(/^#[0-9A-F]{6}$/);
 
-  await page.getByRole('textbox', { name: 'Hex Code' }).fill('#3366FF');
+  await colorPicker.getByRole('button', { name: 'Hue 330' }).click();
+  const presetHex = await colorPicker.locator('.active-color-summary strong').textContent();
+
+  if (!presetHex) {
+    throw new Error('Missing active color hex');
+  }
+
+  await expect(page.locator('.svg-preview-canvas svg rect').nth(1)).toHaveAttribute(
+    'stroke',
+    presetHex,
+  );
+
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const supportsClipboard = await page.evaluate(
+    () => Boolean(navigator.clipboard?.writeText) && Boolean(navigator.clipboard?.readText),
+  );
+
+  if (supportsClipboard) {
+    await colorPicker.getByRole('button', { name: 'Copy hex' }).click();
+    await expect
+      .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+      .toBe(presetHex);
+  }
+
   await page.reload();
   await expect(page.locator('.svg-preview-canvas svg rect').nth(1)).toHaveAttribute(
     'stroke',
-    '#3366FF',
+    presetHex,
   );
 
   const downloadPromise = page.waitForEvent('download');
@@ -185,7 +225,7 @@ test('fits wide previews and calculates custom column spans', async ({ page }) =
     throw new Error('Missing downloaded SVG path');
   }
 
-  await expect.poll(async () => readFile(downloadPath, 'utf8')).toContain('#3366FF');
+  await expect.poll(async () => readFile(downloadPath, 'utf8')).toContain(presetHex);
 });
 
 test('activates preview when a result row is clicked', async ({ page }) => {
