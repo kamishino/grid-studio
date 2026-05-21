@@ -306,19 +306,37 @@ export function GridCalculator() {
                 style={{
                   width: `${Math.min(
                     100,
-                    ((activeLayout.columnWidth + activeLayout.gutterWidth) / width) *
+                    ((columns > 2
+                      ? activeLayout.columnWidth * 2 + activeLayout.gutterWidth * 2
+                      : activeLayout.columnWidth + activeLayout.gutterWidth) /
+                      width) *
                       100,
                   )}%`,
-                  gridTemplateColumns: `${activeLayout.columnWidth}fr ${Math.max(
-                    activeLayout.gutterWidth,
-                    1,
-                  )}fr`,
+                  gridTemplateColumns:
+                    columns > 2
+                      ? `${activeLayout.columnWidth}fr ${Math.max(
+                          activeLayout.gutterWidth,
+                          1,
+                        )}fr ${activeLayout.columnWidth}fr ${Math.max(
+                          activeLayout.gutterWidth,
+                          1,
+                        )}fr`
+                      : `${activeLayout.columnWidth}fr ${Math.max(
+                          activeLayout.gutterWidth,
+                          1,
+                        )}fr`,
                 }}
               >
                 <DimensionRuler
                   label="Column Width"
                   value={`${activeLayout.columnWidth}px`}
                 />
+                {columns > 2 ? (
+                  <>
+                    <span aria-hidden="true" />
+                    <span aria-hidden="true" />
+                  </>
+                ) : null}
                 <DimensionRuler
                   label="Gutter Width"
                   value={`${activeLayout.gutterWidth}px`}
