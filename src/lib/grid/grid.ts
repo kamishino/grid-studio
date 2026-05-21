@@ -14,6 +14,20 @@ export type GridSvgInput = GridInput &
     colors?: GridSvgColors;
   };
 
+export type GridSpanInput = GridInput &
+  GridLayout & {
+    spanColumns: number;
+  };
+
+export type GridSpanCalculation = {
+  spanColumns: number;
+  spanWidth: number;
+  remainingWidth: number;
+  complementColumns: number;
+  complementWidth: number;
+  separatorGutterWidth: number;
+};
+
 export type GridSvgColors = {
   background: string;
   columnFill: string;
@@ -98,6 +112,40 @@ export function calculateGridLayouts(input: GridInput): GridLayout[] {
   } while (columnWidth > gutterWidth);
 
   return layouts;
+}
+
+export function calculateGridSpan({
+  width,
+  columns,
+  columnWidth,
+  gutterWidth,
+  spanColumns,
+}: GridSpanInput): GridSpanCalculation | null {
+  if (
+    !Number.isInteger(width) ||
+    !Number.isInteger(columns) ||
+    !Number.isInteger(columnWidth) ||
+    !Number.isInteger(gutterWidth) ||
+    !Number.isInteger(spanColumns) ||
+    spanColumns < 1 ||
+    spanColumns >= columns
+  ) {
+    return null;
+  }
+
+  const spanWidth = spanColumns * columnWidth + (spanColumns - 1) * gutterWidth;
+  const complementColumns = columns - spanColumns;
+  const complementWidth =
+    complementColumns * columnWidth + (complementColumns - 1) * gutterWidth;
+
+  return {
+    spanColumns,
+    spanWidth,
+    remainingWidth: width - spanWidth,
+    complementColumns,
+    complementWidth,
+    separatorGutterWidth: gutterWidth,
+  };
 }
 
 export function generateGridSvg({
