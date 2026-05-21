@@ -211,6 +211,75 @@ h1 {
   font-weight: 700;
 }
 
+.results-table tr.is-selected td {
+  background: #f9eee8;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.row-actions button,
+.download-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  background: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.row-actions button {
+  padding: 0 10px;
+}
+
+.download-button {
+  padding: 0 12px;
+}
+
+.row-actions button:hover,
+.download-button:hover {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+
+.preview-panel {
+  border-top: 1px solid var(--line);
+}
+
+.section-heading.compact {
+  align-items: center;
+}
+
+.section-heading.compact h2 {
+  font-size: 1.05rem;
+}
+
+.svg-preview {
+  padding: 20px 24px 24px;
+  overflow-x: auto;
+  background:
+    linear-gradient(90deg, rgba(47, 49, 45, 0.04) 1px, transparent 1px),
+    #fffdf6;
+  background-size: 24px 24px;
+}
+
+.svg-preview svg {
+  display: block;
+  width: 100%;
+  min-width: 420px;
+  height: 160px;
+  border: 1px solid var(--line);
+  background: #fffdf6;
+}
+
 .empty-state {
   padding: 28px 24px;
   color: var(--muted);

@@ -8,6 +8,11 @@ export type GridLayout = {
   gutterWidth: number;
 };
 
+export type GridSvgInput = GridInput &
+  GridLayout & {
+    height: number;
+  };
+
 export type GridValidationErrorCode =
   | 'not-integer'
   | 'too-wide'
@@ -80,4 +85,32 @@ export function calculateGridLayouts(input: GridInput): GridLayout[] {
   } while (columnWidth > gutterWidth);
 
   return layouts;
+}
+
+export function generateGridSvg({
+  width,
+  columns,
+  columnWidth,
+  gutterWidth,
+  height,
+}: GridSvgInput): string {
+  const groups = Array.from({ length: columns }, (_, index) => {
+    const x = index * (columnWidth + gutterWidth);
+    const x2 = x + columnWidth;
+
+    return [
+      '<g>',
+      `<line x1="${x}" y1="0" x2="${x}" y2="${height}" stroke="#D6542C" stroke-opacity="0.55" stroke-width="1" />`,
+      `<rect x="${x}" y="0" width="${columnWidth}" height="${height}" fill="#D6542C" fill-opacity="0.48" />`,
+      `<line x1="${x2}" y1="0" x2="${x2}" y2="${height}" stroke="#D6542C" stroke-opacity="0.55" stroke-width="1" />`,
+      '</g>',
+    ].join('');
+  }).join('');
+
+  return [
+    `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none" xmlns="http://www.w3.org/2000/svg">`,
+    `<rect width="${width}" height="${height}" fill="#FFFDF6" />`,
+    groups,
+    '</svg>',
+  ].join('');
 }

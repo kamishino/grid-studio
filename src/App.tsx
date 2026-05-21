@@ -1,6 +1,11 @@
-import { Minus, Plus } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { calculateGridLayouts, validateGridInput } from './grid';
+import { Download, Eye, Minus, Plus } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  calculateGridLayouts,
+  generateGridSvg,
+  type GridLayout,
+  validateGridInput,
+} from './grid';
 
 const parseIntegerInput = (value: string) => {
   if (!/^\d+$/.test(value)) {
@@ -16,6 +21,8 @@ const clampInputValue = (value: string, delta: number) => {
   return String(Math.max(0, current + delta));
 };
 
+const SVG_HEIGHT = 200;
+
 export function App() {
   const [widthInput, setWidthInput] = useState('960');
   const [columnsInput, setColumnsInput] = useState('8');
@@ -27,6 +34,27 @@ export function App() {
     () => calculateGridLayouts({ width, columns }),
     [columns, width],
   );
+  const [selectedLayout, setSelectedLayout] = useState<GridLayout | null>(null);
+  const activeLayout = selectedLayout ?? layouts[0] ?? null;
+  const activeSvg =
+    validation.ok && activeLayout
+      ? generateGridSvg({ width, columns, ...activeLayout, height: SVG_HEIGHT })
+      : null;
+
+  useEffect(() => {
+    setSelectedLayout(null);
+  }, [columns, width]);
+
+  const downloadSvg = (layout: GridLayout) => {
+    const svg = generateGridSvg({ width, columns, ...layout, height: SVG_HEIGHT });
+    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `grid-${width}px-${columns}col-${layout.columnWidth}px-${layout.gutterWidth}px.svg`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <main className="app-shell">
@@ -85,13 +113,37 @@ export function App() {
                   <tr>
                     <th scope="col">Column width</th>
                     <th scope="col">Gutter width</th>
+                    <th scope="col">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {layouts.map((layout) => (
-                    <tr key={`${layout.columnWidth}-${layout.gutterWidth}`}>
+                    <tr
+                      key={`${layout.columnWidth}-${layout.gutterWidth}`}
+                      className={activeLayout === layout ? 'is-selected' : undefined}
+                    >
                       <td>{layout.columnWidth}px</td>
                       <td>{layout.gutterWidth}px</td>
+                      <td>
+                        <div className="row-actions">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedLayout(layout)}
+                            aria-label={`Preview ${layout.columnWidth}px columns and ${layout.gutterWidth}px gutters`}
+                          >
+                            <Eye size={16} />
+                            Preview
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => downloadSvg(layout)}
+                            aria-label={`Download SVG for ${layout.columnWidth}px columns and ${layout.gutterWidth}px gutters`}
+                          >
+                            <Download size={16} />
+                            SVG
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -103,6 +155,34 @@ export function App() {
                   : 'Enter a valid width and column count to calculate layouts.'}
               </div>
             )}
+
+            {activeSvg ? (
+              <section className="preview-panel" aria-label="Selected grid preview">
+                <div className="section-heading compact">
+                  <div>
+                    <p className="eyebrow">Preview</p>
+                    <h2>
+                      {activeLayout?.columnWidth}px columns, {activeLayout?.gutterWidth}px
+                      gutters
+                    </h2>
+                  </div>
+                  {activeLayout ? (
+                    <button
+                      className="download-button"
+                      type="button"
+                      onClick={() => downloadSvg(activeLayout)}
+                    >
+                      <Download size={16} />
+                      Download SVG
+                    </button>
+                  ) : null}
+                </div>
+                <div
+                  className="svg-preview"
+                  dangerouslySetInnerHTML={{ __html: activeSvg }}
+                />
+              </section>
+            ) : null}
           </section>
         </div>
       </section>
