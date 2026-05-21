@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   calculateGridLayouts,
+  calculateGridSpan,
   generateGridSvg,
   validateGridInput,
 } from './grid';
@@ -27,6 +28,39 @@ describe('validateGridInput', () => {
     [{ width: 8, columns: 9 }, 'columns-exceed-width'],
   ] as const)('rejects invalid input %o with %s', (input, code) => {
     expect(validateGridInput(input)).toMatchObject({ ok: false, code });
+  });
+});
+
+describe('calculateGridSpan', () => {
+  it('calculates a 3 column span and 9 column complement for a 1170px grid', () => {
+    expect(
+      calculateGridSpan({
+        width: 1170,
+        columns: 12,
+        columnWidth: 70,
+        gutterWidth: 30,
+        spanColumns: 3,
+      }),
+    ).toEqual({
+      spanColumns: 3,
+      spanWidth: 270,
+      remainingWidth: 900,
+      complementColumns: 9,
+      complementWidth: 870,
+      separatorGutterWidth: 30,
+    });
+  });
+
+  it('rejects spans that do not leave a complementary column range', () => {
+    expect(
+      calculateGridSpan({
+        width: 1170,
+        columns: 12,
+        columnWidth: 70,
+        gutterWidth: 30,
+        spanColumns: 12,
+      }),
+    ).toBeNull();
   });
 });
 
