@@ -199,32 +199,30 @@ export function GridCalculator() {
               : 'Enter a valid width and column count to calculate layouts.'}
           </div>
         )}
-
-        {activeSvg ? (
-          <section className="preview-panel" aria-label="Selected grid preview">
-            <div className="section-heading compact">
-              <div>
-                <p className="eyebrow">Preview</p>
-                <h2>
-                  {activeLayout?.columnWidth}px columns, {activeLayout?.gutterWidth}px
-                  gutters
-                </h2>
-              </div>
-              {activeLayout ? (
-                <button
-                  className="download-button"
-                  type="button"
-                  onClick={() => downloadSvg(activeLayout)}
-                >
-                  <Download size={16} />
-                  Download SVG
-                </button>
-              ) : null}
-            </div>
-            <div className="svg-preview" dangerouslySetInnerHTML={{ __html: activeSvg }} />
-          </section>
-        ) : null}
       </section>
+
+      {activeSvg && activeLayout ? (
+        <section className="preview-panel" aria-label="Selected grid preview">
+          <div className="section-heading compact">
+            <div>
+              <p className="eyebrow">Preview</p>
+              <h2>
+                {activeLayout.columnWidth}px columns, {activeLayout.gutterWidth}px
+                gutters
+              </h2>
+            </div>
+            <button
+              className="download-button"
+              type="button"
+              onClick={() => downloadSvg(activeLayout)}
+            >
+              <Download size={16} />
+              Download SVG
+            </button>
+          </div>
+          <div className="svg-preview" dangerouslySetInnerHTML={{ __html: activeSvg }} />
+        </section>
+      ) : null}
     </div>
   );
 }
