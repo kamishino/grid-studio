@@ -209,6 +209,40 @@
   font-size: 1.05rem;
 }
 
+.preview-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--primitive-spacing-2);
+  justify-content: flex-end;
+}
+
+.preview-mode-control {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 3px;
+  border: 1px solid var(--component-button-border);
+  border-radius: var(--component-button-radius);
+  background: var(--component-button-background-subtle);
+}
+
+.preview-mode-control button {
+  min-height: 26px;
+  border: 0;
+  border-radius: calc(var(--component-button-radius) - 2px);
+  color: var(--semantic-color-muted);
+  background: transparent;
+  padding: 0 10px;
+  font-size: var(--primitive-font-size-sm);
+  font-weight: var(--primitive-font-weight-strong);
+  cursor: pointer;
+}
+
+.preview-mode-control button[aria-pressed='true'] {
+  color: var(--component-button-text);
+  background: var(--component-button-background);
+}
+
 .preview-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -243,7 +277,6 @@
 
 .svg-preview {
   padding: var(--primitive-spacing-5) var(--primitive-spacing-6) var(--primitive-spacing-6);
-  overflow-x: auto;
   background:
     linear-gradient(
       90deg,
@@ -254,14 +287,30 @@
   background-size: var(--primitive-spacing-6) var(--primitive-spacing-6);
 }
 
+.svg-preview.is-fit {
+  overflow-x: hidden;
+}
+
+.svg-preview.is-actual {
+  overflow-x: auto;
+}
+
 .preview-measurement {
   display: grid;
   gap: var(--primitive-spacing-3);
 }
 
+.svg-preview.is-fit .preview-measurement {
+  width: min(100%, var(--preview-width));
+}
+
+.svg-preview.is-actual .preview-measurement {
+  width: var(--preview-width);
+}
+
 .svg-preview-canvas svg {
   display: block;
-  width: auto;
+  width: 100%;
   height: auto;
   outline: 1px solid var(--semantic-color-border);
   background: var(--component-preview-background);

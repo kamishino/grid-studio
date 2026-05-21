@@ -10,6 +10,9 @@ import {
 import './GridCalculator.css';
 
 const SVG_HEIGHT = 200;
+const DEFAULT_PREVIEW_MODE = 'fit';
+
+type PreviewMode = 'fit' | 'actual';
 
 const parseIntegerInput = (value: string) => {
   if (!/^\d+$/.test(value)) {
@@ -45,6 +48,7 @@ const getPreviewColors = (): GridSvgColors => ({
 export function GridCalculator() {
   const [widthInput, setWidthInput] = useState('960');
   const [columnsInput, setColumnsInput] = useState('8');
+  const [previewMode, setPreviewMode] = useState<PreviewMode>(DEFAULT_PREVIEW_MODE);
 
   const width = parseIntegerInput(widthInput);
   const columns = parseIntegerInput(columnsInput);
@@ -211,20 +215,23 @@ export function GridCalculator() {
                 gutters
               </h2>
             </div>
-            <button
-              className="download-button"
-              type="button"
-              onClick={() => downloadSvg(activeLayout)}
-            >
-              <Download size={16} />
-              Download SVG
-            </button>
+            <div className="preview-toolbar">
+              <PreviewModeControl mode={previewMode} onChange={setPreviewMode} />
+              <button
+                className="download-button"
+                type="button"
+                onClick={() => downloadSvg(activeLayout)}
+              >
+                <Download size={16} />
+                Download SVG
+              </button>
+            </div>
           </div>
 
           <PreviewMetrics width={width} columns={columns} layout={activeLayout} />
 
-          <div className="svg-preview" aria-label={`${width}px grid preview canvas`}>
-            <div className="preview-measurement" style={{ width }}>
+          <div className={`svg-preview is-${previewMode}`} aria-label={`${width}px grid preview canvas`}>
+            <div className="preview-measurement" style={{ '--preview-width': `${width}px` } as React.CSSProperties}>
               <DimensionRuler label="Overall Width" value={`${width}px`} />
               <div
                 className="svg-preview-canvas"
@@ -233,10 +240,15 @@ export function GridCalculator() {
               <div
                 className="segment-rulers"
                 style={{
-                  gridTemplateColumns: `${activeLayout.columnWidth}px ${Math.max(
+                  width: `${Math.min(
+                    100,
+                    ((activeLayout.columnWidth + activeLayout.gutterWidth) / width) *
+                      100,
+                  )}%`,
+                  gridTemplateColumns: `${activeLayout.columnWidth}fr ${Math.max(
                     activeLayout.gutterWidth,
                     1,
-                  )}px`,
+                  )}fr`,
                 }}
               >
                 <DimensionRuler
@@ -252,6 +264,33 @@ export function GridCalculator() {
           </div>
         </section>
       ) : null}
+    </div>
+  );
+}
+
+type PreviewModeControlProps = {
+  mode: PreviewMode;
+  onChange: (mode: PreviewMode) => void;
+};
+
+function PreviewModeControl({ mode, onChange }: PreviewModeControlProps) {
+  const modes = [
+    ['fit', 'Fit'],
+    ['actual', 'Actual'],
+  ] as const;
+
+  return (
+    <div className="preview-mode-control" aria-label="Preview display mode">
+      {modes.map(([value, label]) => (
+        <button
+          key={value}
+          type="button"
+          aria-pressed={mode === value}
+          onClick={() => onChange(value)}
+        >
+          {label}
+        </button>
+      ))}
     </div>
   );
 }
